@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elasheva Pay</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f4f7f5;color:#13251a}
+.app{max-width:430px;margin:auto;min-height:100vh;background:#fff;box-shadow:0 0 30px #0001}
+header{background:#08783e;color:#fff;padding:24px 20px;border-radius:0 0 24px 24px}
+.brand{font-size:24px;font-weight:800}.sub{opacity:.85;margin-top:5px}
+main{padding:18px 18px 90px}.balance{background:#0a8f4a;color:white;border-radius:20px;padding:22px;margin-bottom:18px}
+.balance small{opacity:.85}.amount{font-size:32px;font-weight:800;margin:8px 0 16px}
+.row{display:flex;gap:10px}.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:700;cursor:pointer}
+.primary{background:#fff;color:#08783e}.green{background:#08783e;color:#fff;width:100%}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.card{padding:18px;border:1px solid #e5ebe7;border-radius:16px;background:#fff;cursor:pointer}.icon{font-size:25px}
+h2{font-size:20px}.input,select{width:100%;padding:14px;border:1px solid #d9e1dc;border-radius:12px;margin:7px 0 14px;font-size:16px}
+.tx{display:flex;justify-content:space-between;padding:15px 0;border-bottom:1px solid #edf1ee}.success{color:#078442;font-weight:700}.muted{color:#6d786f;font-size:13px}
+nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(430px,100%);background:#fff;border-top:1px solid #ddd;padding:10px;display:flex;justify-content:space-around}
+nav button{background:none;border:0;font-size:12px;color:#526058}.hidden{display:none}.receipt{border:1px dashed #9aa89f;padding:20px;border-radius:16px;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+<header><div class="brand">Elasheva Pay</div><div class="sub">Simple, secure payments</div></header>
+<main>
+<section id="home">
+<div class="balance"><small>Available balance</small><div class="amount" id="bal">₦0.00</div><div class="row"><button class="btn primary" onclick="show('fund')">Fund Wallet</button><button class="btn primary" onclick="show('pay')">Pay</button></div></div>
+<div class="grid">
+<div class="card" onclick="show('fund')"><div class="icon">💰</div><b>Wallet</b><p class="muted">Add money</p></div>
+<div class="card" onclick="show('history')"><div class="icon">📋</div><b>Transactions</b><p class="muted">View activity</p></div>
+<div class="card" onclick="show('pay')"><div class="icon">💳</div><b>Make Payment</b><p class="muted">Pay securely</p></div>
+<div class="card" onclick="show('profile')"><div class="icon">👤</div><b>Profile</b><p class="muted">Account settings</p></div>
+</div>
+<h2>Recent transactions</h2><div id="recent"><p class="muted">No transactions yet.</p></div>
+</section>
+
+<section id="fund" class="hidden">
+<h2>Fund Wallet</h2><label>Amount</label><input class="input" id="fundAmount" type="number" placeholder="₦10,000">
+<label>Payment method</label><select id="method"><option>Bank Transfer</option><option>Card</option><option>USSD</option></select>
+<button class="btn green" onclick="simulateFund()">Continue to Payment</button>
+<p class="muted">Demo mode: no real money is moved.</p>
+</section>
+
+<section id="pay" class="hidden">
+<h2>Make Payment</h2><label>Recipient / Business</label><input class="input" id="recipient" placeholder="e.g. Elasheva Logistics">
+<label>Amount</label><input class="input" id="payAmount" type="number" placeholder="₦10,000">
+<button class="btn green" onclick="simulatePay()">Pay Now</button>
+</section>
+
+<section id="history" class="hidden">
+<h2>Transaction History</h2><div id="alltx"><p class="muted">No transactions yet.</p></div>
+</section>
+
+<section id="receipt" class="hidden">
+<h2>Payment Receipt</h2><div class="receipt"><div style="font-size:40px">✓</div><h2>Payment Successful</h2><p id="receiptText"></p><button class="btn green" onclick="show('home')">Done</button></div>
+</section>
+
+<section id="profile" class="hidden">
+<h2>Profile</h2><label>Full name</label><input class="input" value="Elasheva User">
+<label>Phone</label><input class="input" placeholder="080...">
+<label>Email</label><input class="input" placeholder="you@example.com">
+<button class="btn green" onclick="alert('Profile saved in demo mode')">Save Profile</button>
+</section>
+</main>
+<nav><button onclick="show('home')">🏠<br>Home</button><button onclick="show('fund')">💰<br>Wallet</button><button onclick="show('pay')">💳<br>Pay</button><button onclick="show('history')">📋<br>History</button><button onclick="show('profile')">👤<br>Profile</button></nav>
+</div>
+<script>
+let balance=0, tx=[];
+function money(n){return '₦'+Number(n).toLocaleString('en-NG',{minimumFractionDigits:2})}
+function show(id){document.querySelectorAll('main section').forEach(x=>x.classList.add('hidden'));document.getElementById(id).classList.remove('hidden');render()}
+function addTx(type,amount,detail){tx.unshift({type,amount,detail,date:new Date().toLocaleString()});render()}
+function render(){
+ document.getElementById('bal').textContent=money(balance);
+ const html=tx.length?tx.map(t=>`<div class="tx"><span><b>${t.detail}</b><br><span class="muted">${t.date}</span></span><span class="${t.type==='Credit'?'success':''}">${t.type==='Credit'?'+':'-'}${money(t.amount)}</span></div>`).join(''):'<p class="muted">No transactions yet.</p>';
+ document.getElementById('recent').innerHTML=html.slice(0,2000);document.getElementById('alltx').innerHTML=html;
+}
+function simulateFund(){
+ const a=Number(document.getElementById('fundAmount').value),m=document.getElementById('method').value;
+ if(!a||a<=0)return alert('Enter a valid amount');
+ balance+=a;addTx('Credit',a,'Wallet funding · '+m);
+ document.getElementById('receiptText').innerHTML=`Wallet funded with <b>${money(a)}</b><br>Method: ${m}<br>Reference: EP-${Date.now().toString().slice(-8)}`;
+ show('receipt');
+}
+function simulatePay(){
+ const a=Number(document.getElementById('payAmount').value),r=document.getElementById('recipient').value||'Payment';
+ if(!a||a<=0)return alert('Enter a valid amount');if(a>balance)return alert('Insufficient demo balance');
+ balance-=a;addTx('Debit',a,r);
+ document.getElementById('receiptText').innerHTML=`Paid <b>${money(a)}</b> to <b>${r}</b><br>Reference: EP-${Date.now().toString().slice(-8)}`;
+ show('receipt');
+}
+render();
+</script>
+</body></html>
